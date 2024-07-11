@@ -1,21 +1,21 @@
-name: Build
+name: Tarea Automatizada de ejecución de pruebas
+
+env:
+  SONAR_ORG: 'edwardapaza'                  # Nombre de la organización en SonarCloud
+  SONAR_PROJECT: 'edwardapaza_bddreporte'   # Key ID del proyecto en SonarCloud
 
 on:
   push:
-    branches:
-      - main
-  pull_request:
-    types: [opened, synchronize, reopened]
+    branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
-  sonarcloud:
-    name: SonarCloud
+  build:
+    name: Build and Analyze
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v3
-      with:
-        fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis
 
     - name: Set up PHP
       uses: shivammathur/setup-php@v2
@@ -30,7 +30,7 @@ jobs:
       run: chmod +x vendor/bin/behat
 
     - name: Run Behat tests
-      run: vendor/bin/behat --format=progress
+      run: vendor/bin/behat --format=progress --out=features/bootstrap/reports
 
     - name: SonarCloud Scan
       uses: SonarSource/sonarcloud-github-action@master
@@ -51,4 +51,4 @@ jobs:
       with:
         personal_token: ${{ secrets.PAT_TOKEN }}
         publish_branch: bddreporte
-        publish_dir: ./report/
+        publish_dir: features/bootstrap/reports
