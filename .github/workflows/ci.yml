@@ -30,7 +30,7 @@ jobs:
       run: chmod +x vendor/bin/behat
 
     - name: Run Behat tests
-      run: vendor/bin/behat --format=progress
+      run: vendor/bin/behat --format=html --out=features/bootstrap/reports/index.html
 
     - name: SonarCloud Scan
       uses: SonarSource/sonarcloud-github-action@master
@@ -43,7 +43,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: behat-report
-        path: features/bootstrap/reports/
+        path: features/bootstrap/reports/index.html
 
     - name: Deploy Behat HTML report to GitHub Pages
       if: always()
