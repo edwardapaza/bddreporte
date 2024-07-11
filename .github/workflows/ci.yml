@@ -2,7 +2,7 @@ name: Tarea Automatizada de ejecución de pruebas
 
 env:
   SONAR_ORG: 'edwardapaza'                    # Nombre de la organización en SonarCloud
-  SONAR_PROJECT: 'edwardapaza_bddreporte'        # Key ID del proyecto en SonarCloud
+  SONAR_PROJECT: 'edwardapaza_bddreporte'     # Key ID del proyecto en SonarCloud
 
 on:
   push:
@@ -26,6 +26,9 @@ jobs:
     - name: Install Composer dependencies
       run: composer install
 
+    - name: Give execute permission to Behat
+      run: chmod +x vendor/bin/behat
+
     - name: Run Behat tests
       run: vendor/bin/behat --format=progress
 
@@ -40,7 +43,7 @@ jobs:
       if: always()
       uses: peaceiris/actions-gh-pages@v3
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
+        personal_token: ${{ secrets.GITHUB_TOKEN }}
         publish_branch: bddreporte
         publish_dir: ./report/
 
@@ -50,7 +53,6 @@ jobs:
 
     - name: SonarCloud Scan
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       run: |
         dotnet-sonarscanner begin /k:"${{ env.SONAR_PROJECT }}" /o:"${{ env.SONAR_ORG }}" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
