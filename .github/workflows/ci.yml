@@ -1,0 +1,58 @@
+name: Tarea Automatizada de ejecución de pruebas
+
+env:
+  SONAR_ORG: 'edwardapaza'                    # Nombre de la organización en SonarCloud
+  SONAR_PROJECT: 'edwardapaza_bddreporte'        # Key ID del proyecto en SonarCloud
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Ejecutar pruebas con Behat y analizar con SonarCloud
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2' # Ajusta la versión de PHP según tus necesidades
+        extensions: mbstring, intl, pdo_mysql
+
+    - name: Install Composer dependencies
+      run: composer install
+
+    - name: Run Behat tests
+      run: vendor/bin/behat --format=progress
+
+    - name: Upload Behat HTML report
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: behat-report
+        path: features/bootstrap/reports/
+
+    - name: Deploy Behat HTML report to GitHub Pages
+      if: always()
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_branch: bddreporte
+        publish_dir: ./report/
+
+    - name: Install SonarScanner
+      run: |
+        dotnet tool install --global dotnet-sonarscanner
+
+    - name: SonarCloud Scan
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      run: |
+        dotnet-sonarscanner begin /k:"${{ env.SONAR_PROJECT }}" /o:"${{ env.SONAR_ORG }}" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
+        dotnet build
+        dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"

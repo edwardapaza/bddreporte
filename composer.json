@@ -1,0 +1,8 @@
+{
+    "require-dev": {
+        "behat/behat": "*",
+        "bex/behat-extension-driver-locator": "1.0",
+        "emuse/behat-html-formatter": "0.2.0",
+        "phake/phake": "3.0"
+    }
+}
