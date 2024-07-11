@@ -52,12 +52,12 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: '17'
+        check-latest: true
 
     - name: Install SonarScanner CLI
       run: |
         curl -sSLo sonarscanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip
         unzip sonarscanner.zip
-        export PATH=$PATH:$(pwd)/sonar-scanner-4.8.0.2856-linux/bin
         echo "$(pwd)/sonar-scanner-4.8.0.2856-linux/bin" >> $GITHUB_PATH
 
     - name: Verify Java Version
