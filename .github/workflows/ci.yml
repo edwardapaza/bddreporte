@@ -30,7 +30,7 @@ jobs:
       run: chmod +x vendor/bin/behat
 
     - name: Run Behat tests
-      run: vendor/bin/behat --format=progress --out=features/bootstrap/reports
+      run: vendor/bin/behat --format=progress
 
     - name: SonarCloud Scan
       uses: SonarSource/sonarcloud-github-action@master
