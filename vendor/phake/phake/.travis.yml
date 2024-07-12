@@ -3,15 +3,15 @@ language: php
 dist: trusty
 
 php:
-  - 7.0
   - 7.1
-  - nightly
+  - 7.2
+  - 7.3
 
 env:
-  - PHPUNIT_VERSION=6.0.x-dev
-  - PHPUNIT_VERSION=6.1.x-dev
-  - PHPUNIT_VERSION=6.2.x-dev
-  - PHPUNIT_VERSION=6.3.x-dev
+  - PHPUNIT_VERSION=6.5.14
+  - PHPUNIT_VERSION=7.5
+  - PHPUNIT_VERSION=8.1
+  - PHPUNIT_VERSION=9.0
 
 
 script:
@@ -19,9 +19,11 @@ script:
 
 matrix:
   allow_failures:
-    - php: nightly
-    - env: PHPUNIT_VERSION=6.3.x-dev
-  exclude:
+    - env: PHPUNIT_VERSION=8.1
+    - env: PHPUNIT_VERSION=9.0
+#  exclude:
+#    - php: 7.1
+#      env: PHPUNIT_VERSION=8.1
 
 install:
   - composer require --dev phpunit/phpunit:${PHPUNIT_VERSION}

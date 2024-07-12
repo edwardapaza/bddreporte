@@ -56,7 +56,7 @@ class Phake_PHPUnit_VerifierResultConstraingV6Test extends TestCase
         if (version_compare('6.0.0', Version::id()) != 1) {
             $this->markTestSkipped('The tested class is not compatible with current version of PHPUnit.');
         }
-        $this->constraint = new Phake_PHPUnit_VerifierResultConstraintV3d6();
+        $this->constraint = new Phake_PHPUnit_VerifierResultConstraintV6();
     }
 
     public function testExtendsPHPUnitConstraint()

@@ -55,71 +55,6 @@ class Phake_ClassGenerator_MockClass
      */
     private $loader;
 
-    private $reservedWords = array(
-        'abstract' => 'abstract',
-        'and' => 'and',
-        'array' => 'array',
-        'as' => 'as',
-        'break' => 'break',
-        'case' => 'case',
-        'catch' => 'catch',
-        'class' => 'class',
-        'clone' => 'clone',
-        'const' => 'const',
-        'continue' => 'continue',
-        'declare' => 'declare',
-        'default' => 'default',
-        'do' => 'do',
-        'else' => 'else',
-        'elseif' => 'elseif',
-        'enddeclare' => 'enddeclare',
-        'endfor' => 'endfor',
-        'endforeach' => 'endforeach',
-        'endif' => 'endif',
-        'endswitch' => 'endswitch',
-        'endwhile' => 'endwhile',
-        'extends' => 'extends',
-        'final' => 'final',
-        'for' => 'for',
-        'foreach' => 'foreach',
-        'function' => 'function',
-        'global' => 'global',
-        'goto' => 'goto',
-        'if' => 'if',
-        'implements' => 'implements',
-        'interface' => 'interface',
-        'instanceof' => 'instanceof',
-        'namespace' => 'namespace',
-        'new' => 'new',
-        'or' => 'or',
-        'private' => 'private',
-        'protected' => 'protected',
-        'public' => 'public',
-        'static' => 'static',
-        'switch' => 'switch',
-        'throw' => 'throw',
-        'try' => 'try',
-        'use' => 'use',
-        'var' => 'var',
-        'while' => 'while',
-        'xor' => 'xor',
-        'die' => 'die',
-        'echo' => 'echo',
-        'empty' => 'empty',
-        'exit' => 'exit',
-        'eval' => 'eval',
-        'include' => 'include',
-        'include_once' => 'include_once',
-        'isset' => 'isset',
-        'list' => 'list',
-        'require' => 'require',
-        'require_once' => 'require_once',
-        'return' => 'return',
-        'print' => 'print',
-        'unset' => 'unset',
-        '__halt_compiler' => '__halt_compiler'
-    );
-
     /**
      * @param Phake_ClassGenerator_ILoader $loader
      */
@@ -330,17 +265,13 @@ class {$newClassName} {$extends}
         $methodDefs = '';
         $filter     = ReflectionMethod::IS_ABSTRACT | ReflectionMethod::IS_PROTECTED | ReflectionMethod::IS_PUBLIC | ~ReflectionMethod::IS_FINAL;
 
-        if (empty($implementedMethods))
-        {
-            $implementedMethods = $this->reservedWords;
-        }
         foreach ($mockedClass->getMethods($filter) as $method) {
             $methodName = $method->getName();
             if (!$method->isConstructor() && !$method->isDestructor() && !$method->isFinal()
                 && !isset($implementedMethods[$methodName])
             ) {
                 $implementedMethods[$methodName] = $methodName;
-                $methodDefs .= $this->implementMethod($method, $method->isStatic()) . "\n";
+                $methodDefs .= $this->implementMethod($method, $mockedClass->getName(), $method->isStatic()) . "\n";
             }
         }
 
@@ -457,10 +388,12 @@ class {$newClassName} {$extends}
      * Creates the implementation of a single method
      *
      * @param ReflectionMethod $method
+     * @param string           $mockedClassName
+     * @param bool             $static
      *
      * @return string
      */
-    protected function implementMethod(ReflectionMethod $method, $static = false)
+    protected function implementMethod(ReflectionMethod $method, $mockedClassName, $static = false)
     {
         $modifiers = implode(
             ' ',
@@ -484,14 +417,21 @@ class {$newClassName} {$extends}
         if (method_exists($method, 'hasReturnType') && $method->hasReturnType())
         {
             $returnType = $method->getReturnType();
-            if ($returnType->allowsNull())
+            $returnTypeName = $returnType->getName();
+
+            if ($returnTypeName == 'self')
             {
-                $returnHint = ' : ?' . $returnType;
-            } else {
-                $returnHint = ' : ' . $returnType;
+                $returnTypeName = $mockedClassName;
             }
 
-            if ($returnType == 'void')
+            if ($returnType->allowsNull())
+            {
+                $returnHint = ' : ?' . $returnTypeName;
+            } else {
+                $returnHint = ' : ' . $returnTypeName;
+            }
+
+            if ($returnTypeName == 'void')
             {
                 $nullReturn = '';
                 $resultReturn = '';
@@ -607,7 +547,14 @@ class {$newClassName} {$extends}
                 $type = $parameter->getClass()->getName() . ' ';
             } elseif (method_exists($parameter, 'hasType') && $parameter->hasType())
             {
-                $type = $parameter->getType() . ' ';
+                $type = $parameter->getType()->getName() . ' ';
+            }
+
+            if (method_exists($parameter, 'hasType') && $parameter->hasType() && $parameter->allowsNull()) {
+                // a parameter can have a type hint and a default value of null without being a 7.1 nullable type hint
+                if (!($parameter->isDefaultValueAvailable() && $parameter->getDefaultValue() === null)) {
+                    $type = '?'.$type;
+                }
             }
         }
         catch (ReflectionException $e)

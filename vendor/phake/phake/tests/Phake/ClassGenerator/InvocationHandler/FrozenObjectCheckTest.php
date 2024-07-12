@@ -62,7 +62,7 @@ class Phake_ClassGenerator_InvocationHandler_FrozenObjectCheckTest extends TestC
 
     public function setUp()
     {
-        Phake::setClient(Phake::CLIENT_PHPUNIT6);
+        Phake::setClient(Phake::CLIENT_PHPUNIT7);
         Phake::initAnnotations($this);
         $this->handler    = new Phake_ClassGenerator_InvocationHandler_FrozenObjectCheck($this->mockInfo);
     }
