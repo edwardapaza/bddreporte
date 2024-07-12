@@ -47,6 +47,11 @@ jobs:
             exit 1
           fi
 
+      - name: Generate Markdown Coverage Summary
+        run: |
+          vendor/bin/phpunit --configuration phpunit.xml --coverage-clover build/logs/clover.xml
+          docker run -v $PWD:/workspace ghcr.io/danielpalme/reportgenerator -reports:build/logs/clover.xml -targetdir:build/coverage-summary -reporttypes:MarkdownSummaryGithub
+
       - name: Compress HTML Coverage Report
         run: |
           if [ -d build/coverage ]; then
@@ -58,6 +63,12 @@ jobs:
         with:
           name: html-coverage-report
           path: build/coverage-report.tar.gz
+
+      - name: Upload Coverage Summary
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage-summary
+          path: build/coverage-summary/MarkdownSummaryGithub.md
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
@@ -79,3 +90,7 @@ jobs:
           personal_token: ${{ secrets.PAT_TOKEN }}
           publish_branch: bddreporte
           publish_dir: features/bootstrap/reports
+
+      - name: Publish Coverage Summary in Build Summary
+        run: cat build/coverage-summary/MarkdownSummaryGithub.md >> $GITHUB_STEP_SUMMARY
+        shell: bash
