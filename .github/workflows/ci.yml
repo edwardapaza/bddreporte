@@ -63,7 +63,7 @@ jobs:
 
       - name: Generate Markdown Coverage Summary
         run: |
-          docker run --rm -v ${GITHUB_WORKSPACE}:/workspace -w /workspace danielpalme/reportgenerator -reports:build/logs/clover.xml -targetdir:coveragereport -reporttypes:MarkdownSummary;MarkdownSummaryGithub
+          reportgenerator "-reports:build/logs/clover.xml" "-targetdir:coveragereport" "-reporttypes:MarkdownSummary;MarkdownSummaryGithub"
           echo "Contents of coveragereport directory:"
           ls -la coveragereport
           if [ -f coveragereport/SummaryGithub.md ]; then
