@@ -30,6 +30,9 @@ jobs:
           php -r "var_dump(extension_loaded('xdebug'));"
           php --ini
 
+      - name: Check Xdebug Status
+        run: php -i | grep -i xdebug
+
       - name: Install Composer dependencies
         run: composer install
 
