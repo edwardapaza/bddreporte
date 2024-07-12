@@ -3,10 +3,15 @@ name: Tarea Automatizada de ejecución de pruebas
 env:
   SONAR_ORG: 'edwardapaza'
   SONAR_PROJECT: 'edwardapaza_bddreporte'
+  DB_HOST: '161.132.49.95'
+  DB_PORT: '3306'
+  DB_USER: 'escobar'
+  DB_PASS: 'Upt2024'
+  DB_NAME: 'sis_venta_test'
 
 on:
   push:
-    branches: ["main"]
+    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
@@ -23,8 +28,6 @@ jobs:
         with:
           php-version: '8.2'
           extensions: mbstring, intl, pdo_mysql, xdebug
-          coverage: phpunit
-          tools: phpunit, composer
 
       - name: Install Composer dependencies
         run: composer install
@@ -36,6 +39,11 @@ jobs:
         run: |
           chmod +x vendor/bin/behat
           chmod +x vendor/bin/phpunit
+
+      - name: Check Database Connection
+        run: |
+          sudo apt-get install -y mariadb-client
+          mysql --host=${{ env.DB_HOST }} --port=${{ env.DB_PORT }} --user=${{ env.DB_USER }} --password=${{ env.DB_PASS }} --execute="SHOW DATABASES;"
 
       - name: Run Behat tests
         run: vendor/bin/behat --format=html --out=features/bootstrap/reports/index.html
@@ -87,22 +95,6 @@ jobs:
       - name: Publish coverage in build summary
         run: cat coveragereport/Summary.md >> $GITHUB_STEP_SUMMARY
         shell: bash
-
-      - name: Check Database Connection
-        run: |
-          sudo apt-get install -y mariadb-client
-          mysql --host 161.132.49.95 --port 3306 --user=escobar --password=Upt2024 --execute="SHOW DATABASES;"
-
-      - name: Set Execute Permission for PHPUnit
-        run: chmod +x vendor/bin/phpunit
-
-      - name: Run tests with coverage report
-        env:
-          DB_HOST: 161.132.49.95
-          DB_USER: escobar
-          DB_PASS: Upt2024
-          DB_NAME: sis_venta_test
-        run: php -d xdebug.mode=coverage -d xdebug.start_with_request=yes vendor/bin/phpunit --configuration phpunit.xml --coverage-html build/coverage
 
       - name: Upload HTML Coverage Report
         uses: actions/upload-artifact@v2
