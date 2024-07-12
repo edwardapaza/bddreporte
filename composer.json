@@ -5,6 +5,6 @@
         "emuse/behat-html-formatter": "0.2.0",
         "phake/phake": "^3.0",
         "phpunit/phpunit": "^9.0",
-        "crysalead/kahlan": "^4.9"
+        "php-coveralls/php-coveralls": "^2.5"
     }
 }
