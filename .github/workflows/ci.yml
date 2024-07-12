@@ -27,25 +27,13 @@ jobs:
         run: composer install
 
       - name: Create reports directory
-        run: mkdir -p features/bootstrap/reports build/logs build/coverage coveragereport
+        run: mkdir -p features/bootstrap/reports build/coverage
 
       - name: Give execute permission to Behat
         run: chmod +x vendor/bin/behat
 
       - name: Run Behat tests
         run: vendor/bin/behat --format=html --out=features/bootstrap/reports/index.html
-
-      - name: Generate Coverage Report
-        run: |
-          php -d xdebug.mode=coverage -d xdebug.start_with_request=yes vendor/bin/phpunit --configuration phpunit.xml --coverage-clover build/logs/clover.xml
-          echo "Contents of build/logs directory:"
-          ls -la build/logs
-          if [ -f build/logs/clover.xml ]; then
-            echo "Coverage report generated successfully."
-          else
-            echo "Coverage report not found."
-            exit 1
-          fi
 
       - name: Generate HTML Coverage Report
         run: |
@@ -58,12 +46,6 @@ jobs:
             echo "HTML Coverage report not found."
             exit 1
           fi
-
-      - name: Upload coverage report artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: CoverageReport
-          path: build/logs/clover.xml
 
       - name: Upload HTML Coverage Report
         uses: actions/upload-artifact@v2
