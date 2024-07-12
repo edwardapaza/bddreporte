@@ -40,7 +40,7 @@ jobs:
 
       - name: Run Behat tests
         run: vendor/bin/behat --format=html --out=features/bootstrap/reports/index.html
-
+      
       - name: Generate HTML Coverage Report
         run: |
           php -d xdebug.mode=coverage -d xdebug.start_with_request=yes vendor/bin/phpunit --configuration phpunit.xml --coverage-html build/coverage
@@ -85,6 +85,7 @@ jobs:
             exit 1
           fi
 
+          
       - name: Publish coverage in build summary
         run: cat coveragereport/Summary.md >> $GITHUB_STEP_SUMMARY
         shell: bash
