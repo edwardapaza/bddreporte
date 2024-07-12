@@ -40,7 +40,7 @@ jobs:
 
     - name: Generate Coverage Report
       run: |
-        XDEBUG_MODE=coverage ./vendor/bin/phpunit --coverage-text --coverage-clover=coverage.xml
+        XDEBUG_MODE=coverage ./vendor/bin/phpunit --configuration phpunit.xml --coverage-text --coverage-clover=coverage.xml
 
     - name: Upload Coverage Report
       uses: actions/upload-artifact@v2
