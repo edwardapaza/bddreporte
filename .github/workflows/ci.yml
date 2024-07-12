@@ -61,9 +61,17 @@ jobs:
             exit 1
           fi
 
+      - name: Install .NET Core SDK
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '8.0'
+
+      - name: Install ReportGenerator
+        run: dotnet tool install --global dotnet-reportgenerator-globaltool
+
       - name: Generate Markdown Coverage Summary
         run: |
-          reportgenerator "-reports:build/logs/clover.xml" "-targetdir:coveragereport" "-reporttypes:MarkdownSummary;MarkdownSummaryGithub"
+          ~/.dotnet/tools/reportgenerator -reports:build/logs/clover.xml -targetdir:coveragereport -reporttypes:MarkdownSummary;MarkdownSummaryGithub
           echo "Contents of coveragereport directory:"
           ls -la coveragereport
           if [ -f coveragereport/SummaryGithub.md ]; then
