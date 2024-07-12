@@ -21,7 +21,7 @@ jobs:
       uses: shivammathur/setup-php@v2
       with:
         php-version: '8.2' # Ajusta la versión de PHP según tus necesidades
-        extensions: mbstring, intl, pdo_mysql
+        extensions: mbstring, intl, pdo_mysql, xdebug
 
     - name: Install Composer dependencies
       run: composer install
@@ -34,6 +34,33 @@ jobs:
 
     - name: Run Behat tests
       run: vendor/bin/behat --format=html --out=features/bootstrap/reports/index.html
+
+    - name: Generate Coverage Report
+      run: |
+        XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-text --coverage-clover=coverage.xml
+
+    - name: Upload Coverage Report
+      uses: actions/upload-artifact@v2
+      with:
+        name: coverage-report
+        path: coverage.xml
+
+    - name: ReportGenerator
+      uses: danielpalme/ReportGenerator-GitHub-Action@5.3.7
+      with:
+        reports: coverage.xml
+        targetdir: coveragereport
+        reporttypes: MarkdownSummary;MarkdownAssembliesSummary;MarkdownSummaryGithub
+
+    - name: Upload coverage report artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: CoverageReport
+        path: coveragereport
+
+    - name: Publish coverage in build summary
+      run: cat coveragereport/SummaryGithub.md >> $GITHUB_STEP_SUMMARY
+      shell: bash
 
     - name: SonarCloud Scan
       uses: SonarSource/sonarcloud-github-action@master
