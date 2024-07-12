@@ -53,6 +53,11 @@ jobs:
         run: |
           if [ -d build/coverage ]; then
             tar -czf build/coverage-report.tar.gz -C build/coverage .
+            echo "Contents of the tar.gz file:"
+            tar -tzf build/coverage-report.tar.gz
+          else
+            echo "HTML Coverage report directory not found."
+            exit 1
           fi
 
       - name: Upload HTML Coverage Report
