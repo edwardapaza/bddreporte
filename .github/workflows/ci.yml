@@ -32,6 +32,9 @@ jobs:
     - name: Give execute permission to Behat
       run: chmod +x vendor/bin/behat
 
+    - name: Give execute permission to PHPUnit
+      run: chmod +x vendor/bin/phpunit
+
     - name: Run Behat tests
       run: vendor/bin/behat --format=html --out=features/bootstrap/reports/index.html
 
