@@ -55,6 +55,10 @@ jobs:
       - name: Print PHPUnit Output
         run: cat coverage.xml || echo "No coverage.xml found"
 
+      - name: Print Detailed PHPUnit Output
+        run: |
+          php -d xdebug.mode=coverage -d xdebug.start_with_request=yes ./vendor/bin/phpunit --configuration phpunit.xml --coverage-text --coverage-clover=coverage.xml || true
+
       - name: Verify Coverage Report
         run: |
           if [ ! -f coverage.xml ]; then echo "coverage.xml not found"; exit 1; fi
