@@ -49,6 +49,18 @@ jobs:
             exit 1
           fi
 
+      - name: Generate Clover Coverage Report
+        run: |
+          php -d xdebug.mode=coverage -d xdebug.start_with_request=yes vendor/bin/phpunit --configuration phpunit.xml --coverage-clover build/logs/clover.xml
+          echo "Contents of build/logs directory:"
+          ls -la build/logs
+          if [ -f build/logs/clover.xml ]; then
+            echo "Clover Coverage report generated successfully."
+          else
+            echo "Clover Coverage report not found."
+            exit 1
+          fi
+
       - name: Compress HTML Coverage Report
         run: |
           if [ -d build/coverage ]; then
