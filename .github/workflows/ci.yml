@@ -6,7 +6,7 @@ env:
 
 on:
   push:
-    branches: ["main"]
+    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
@@ -23,8 +23,6 @@ jobs:
         with:
           php-version: '8.2'
           extensions: mbstring, intl, pdo_mysql, xdebug
-          coverage: phpunit
-          tools: phpunit, composer
 
       - name: Install Composer dependencies
         run: composer install
@@ -39,8 +37,18 @@ jobs:
 
       - name: Run Behat tests
         run: vendor/bin/behat --format=html --out=features/bootstrap/reports/index.html
-      
-      - name: Generate HTML Coverage Report
+
+      - name: Check Database Connection
+        run: |
+          sudo apt-get install -y mariadb-client
+          mysql --host 161.132.49.95 --port 3306 --user=escobar --password=Upt2024 --execute="SHOW DATABASES;"
+
+      - name: Run tests with coverage report
+        env:
+          DB_HOST: 161.132.49.95
+          DB_USER: escobar
+          DB_PASS: Upt2024
+          DB_NAME: sis_venta_test
         run: |
           php -d xdebug.mode=coverage -d xdebug.start_with_request=yes vendor/bin/phpunit --configuration phpunit.xml --coverage-html build/coverage
           echo "Contents of build/coverage directory:"
@@ -74,7 +82,7 @@ jobs:
 
       - name: Generate Markdown Coverage Summary
         run: |
-          ~/.dotnet/tools/reportgenerator -reports:build/logs/clover.xml -targetdir:coveragereport -reporttypes:MarkdownSummary;MarkdownSummaryGithub
+          ~/.dotnet/tools/reportgenerator -reports:build/logs/clover.xml -targetdir:coveragereport -reporttypes:MarkdownSummary
           echo "Contents of coveragereport directory:"
           ls -la coveragereport
           if [ -f coveragereport/Summary.md ]; then
@@ -87,19 +95,6 @@ jobs:
       - name: Publish coverage in build summary
         run: cat coveragereport/Summary.md >> $GITHUB_STEP_SUMMARY
         shell: bash
-
-      - name: Check Database Connection
-        run: |
-          sudo apt-get install -y mariadb-client
-          mysql --host 161.132.49.95 --port 3306 --user=escobar --password=Upt2024 --execute="SHOW DATABASES;"
-
-      - name: Run tests with coverage report
-        env:
-          DB_HOST: 161.132.49.95
-          DB_USER: escobar
-          DB_PASS: Upt2024
-          DB_NAME: sis_venta_test
-        run: php -d xdebug.mode=coverage -d xdebug.start_with_request=yes vendor/bin/phpunit --configuration phpunit.xml --coverage-html build/coverage
 
       - name: Upload HTML Coverage Report
         uses: actions/upload-artifact@v2
