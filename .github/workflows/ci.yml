@@ -71,10 +71,10 @@ jobs:
 
       - name: Generate Markdown Coverage Summary
         run: |
-          ~/.dotnet/tools/reportgenerator -reports:build/logs/clover.xml -targetdir:coveragereport -reporttypes:MarkdownSummary;MarkdownSummaryGithub
+          ~/.dotnet/tools/reportgenerator -reports:build/logs/clover.xml -targetdir:coveragereport -reporttypes:MarkdownSummary
           echo "Contents of coveragereport directory:"
           ls -la coveragereport
-          if [ -f coveragereport/SummaryGithub.md ]; then
+          if [ -f coveragereport/Summary.md ]; then
             echo "Markdown Summary report generated successfully."
           else
             echo "Markdown Summary report not found."
@@ -91,7 +91,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: coverage-summary
-          path: coveragereport/SummaryGithub.md
+          path: coveragereport/Summary.md
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
