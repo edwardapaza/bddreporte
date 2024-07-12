@@ -6,7 +6,7 @@ env:
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   workflow_dispatch:
 
 jobs:
@@ -27,7 +27,7 @@ jobs:
         run: composer install
 
       - name: Create reports directory
-        run: mkdir -p features/bootstrap/reports
+        run: mkdir -p features/bootstrap/reports build/logs build/coverage coveragereport
 
       - name: Give execute permission to Behat
         run: chmod +x vendor/bin/behat
@@ -37,25 +37,28 @@ jobs:
 
       - name: Generate Coverage Report
         run: |
-          mkdir -p build/logs
-          php -d xdebug.mode=coverage vendor/bin/phpunit --coverage-clover build/logs/clover.xml
-
-      - name: Upload Coverage Report
-        uses: actions/upload-artifact@v2
-        with:
-          name: coverage-report
-          path: build/logs/clover.xml
+          php -d xdebug.mode=coverage -d xdebug.start_with_request=yes vendor/bin/phpunit --configuration phpunit.xml --coverage-clover build/logs/clover.xml
 
       - name: Generate HTML Coverage Report
         run: |
-          mkdir -p build/coverage
-          php -d xdebug.mode=coverage vendor/bin/phpunit --coverage-html build/coverage
+          php -d xdebug.mode=coverage -d xdebug.start_with_request=yes vendor/bin/phpunit --configuration phpunit.xml --coverage-html build/coverage
 
-      - name: Upload HTML Coverage Report
+      - name: ReportGenerator
+        uses: danielpalme/ReportGenerator-GitHub-Action@5.3.7
+        with:
+          reports: build/logs/clover.xml
+          targetdir: coveragereport
+          reporttypes: MarkdownSummary;MarkdownAssembliesSummary;MarkdownSummaryGithub
+
+      - name: Upload coverage report artifact
         uses: actions/upload-artifact@v2
         with:
-          name: html-coverage-report
-          path: build/coverage
+          name: CoverageReport 
+          path: coveragereport 
+
+      - name: Publish coverage in build summary
+        run: cat coveragereport/SummaryGithub.md >> $GITHUB_STEP_SUMMARY
+        shell: bash
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
