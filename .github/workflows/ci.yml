@@ -52,7 +52,7 @@ jobs:
       - name: Generate Markdown Coverage Summary
         run: |
           vendor/bin/phpunit --configuration phpunit.xml --coverage-clover build/logs/clover.xml
-          docker run -v $PWD:/workspace ghcr.io/danielpalme/reportgenerator -reports:build/logs/clover.xml -targetdir:build/coverage-summary -reporttypes:MarkdownSummaryGithub
+          vendor/bin/kahlan --coverage=3 --reporter=markdown:build/coverage-summary/MarkdownSummaryGithub.md
 
       - name: Compress HTML Coverage Report
         run: |
