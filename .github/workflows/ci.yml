@@ -27,7 +27,7 @@ jobs:
         run: composer install
 
       - name: Create reports directory
-        run: mkdir -p features/bootstrap/reports build/coverage
+        run: mkdir -p features/bootstrap/reports build/logs build/coverage coveragereport
 
       - name: Give execute permission to Behat
         run: chmod +x vendor/bin/behat
@@ -47,11 +47,17 @@ jobs:
             exit 1
           fi
 
+      - name: Compress HTML Coverage Report
+        run: |
+          if [ -d build/coverage ]; then
+            tar -czf build/coverage-report.tar.gz -C build/coverage .
+          fi
+
       - name: Upload HTML Coverage Report
         uses: actions/upload-artifact@v2
         with:
           name: html-coverage-report
-          path: build/coverage
+          path: build/coverage-report.tar.gz
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
