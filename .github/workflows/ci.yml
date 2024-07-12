@@ -1,12 +1,12 @@
 name: Tarea Automatizada de ejecución de pruebas
 
 env:
-  SONAR_ORG: 'edwardapaza'                  # Nombre de la organización en SonarCloud
-  SONAR_PROJECT: 'edwardapaza_bddreporte'   # Key ID del proyecto en SonarCloud
+  SONAR_ORG: 'edwardapaza'
+  SONAR_PROJECT: 'edwardapaza_bddreporte'
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   workflow_dispatch:
 
 jobs:
@@ -15,75 +15,82 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - name: Set up PHP
-      uses: shivammathur/setup-php@v2
-      with:
-        php-version: '8.2' # Ajusta la versión de PHP según tus necesidades
-        extensions: mbstring, intl, pdo_mysql, xdebug
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, intl, pdo_mysql, xdebug
 
-    - name: Install Composer dependencies
-      run: composer install
+      - name: Verify PHP and Xdebug Installation
+        run: |
+          php -v
+          php -m
+          php -r "var_dump(extension_loaded('xdebug'));"
+          php --ini
 
-    - name: Create reports directory
-      run: mkdir -p features/bootstrap/reports
+      - name: Install Composer dependencies
+        run: composer install
 
-    - name: Give execute permission to Behat
-      run: chmod +x vendor/bin/behat
+      - name: Create reports directory
+        run: mkdir -p features/bootstrap/reports
 
-    - name: Give execute permission to PHPUnit
-      run: chmod +x vendor/bin/phpunit
+      - name: Give execute permission to Behat
+        run: chmod +x vendor/bin/behat
 
-    - name: Run Behat tests
-      run: vendor/bin/behat --format=html --out=features/bootstrap/reports/index.html
+      - name: Give execute permission to PHPUnit
+        run: chmod +x vendor/bin/phpunit
 
-    - name: Generate Coverage Report
-      run: |
-        XDEBUG_MODE=coverage ./vendor/bin/phpunit --configuration phpunit.xml --coverage-text --coverage-clover=coverage.xml
-      continue-on-error: true
+      - name: Run Behat tests
+        run: vendor/bin/behat --format=html --out=features/bootstrap/reports/index.html
 
-    - name: Verify Coverage Report
-      run: |
-        if [ ! -f coverage.xml ]; then echo "coverage.xml not found"; exit 1; fi
+      - name: Generate Coverage Report
+        run: |
+          XDEBUG_MODE=coverage ./vendor/bin/phpunit --configuration phpunit.xml --coverage-text --coverage-clover=coverage.xml
+        continue-on-error: true
 
-    - name: Upload Coverage Report
-      uses: actions/upload-artifact@v2
-      with:
-        name: coverage-report
-        path: coverage.xml
+      - name: Verify Coverage Report
+        run: |
+          if [ ! -f coverage.xml ]; then echo "coverage.xml not found"; exit 1; fi
 
-    - name: Generate HTML Coverage Report
-      run: |
-        mkdir -p coveragereport
-        ./vendor/bin/phpunit --configuration phpunit.xml --coverage-html coveragereport
+      - name: Upload Coverage Report
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage-report
+          path: coverage.xml
 
-    - name: Upload HTML Coverage Report
-      uses: actions/upload-artifact@v2
-      with:
-        name: html-coverage-report
-        path: coveragereport
+      - name: Generate HTML Coverage Report
+        run: |
+          mkdir -p coveragereport
+          XDEBUG_MODE=coverage ./vendor/bin/phpunit --configuration phpunit.xml --coverage-html coveragereport
 
-    - name: Publish coverage in build summary
-      run: echo "Coverage report generated"
+      - name: Upload HTML Coverage Report
+        uses: actions/upload-artifact@v2
+        with:
+          name: html-coverage-report
+          path: coveragereport
 
-    - name: SonarCloud Scan
-      uses: SonarSource/sonarcloud-github-action@master
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Needed to get PR information, if any
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - name: Publish coverage in build summary
+        run: echo "Coverage report generated"
 
-    - name: Upload Behat HTML report
-      if: always()
-      uses: actions/upload-artifact@v2
-      with:
-        name: behat-report
-        path: features/bootstrap/reports/index.html
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-    - name: Deploy Behat HTML report to GitHub Pages
-      if: always()
-      uses: peaceiris/actions-gh-pages@v3
-      with:
-        personal_token: ${{ secrets.PAT_TOKEN }}
-        publish_branch: bddreporte
-        publish_dir: features/bootstrap/reports
+      - name: Upload Behat HTML report
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: behat-report
+          path: features/bootstrap/reports/index.html
+
+      - name: Deploy Behat HTML report to GitHub Pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          personal_token: ${{ secrets.PAT_TOKEN }}
+          publish_branch: bddreporte
+          publish_dir: features/bootstrap/reports
