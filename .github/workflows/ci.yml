@@ -6,13 +6,23 @@ env:
 
 on:
   push:
-    branches: ["main"]
+    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
   build:
     name: Build and Analyze
     runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: testdb
+        options: --health-cmd="mysqladmin ping --silent" --health-interval=10s --health-timeout=5s --health-retries=3
+        ports:
+          - 3306:3306
 
     steps:
       - uses: actions/checkout@v3
@@ -23,79 +33,31 @@ jobs:
           php-version: '8.2'
           extensions: mbstring, intl, pdo_mysql, xdebug
 
+      - name: Wait for MySQL to be ready
+        run: sudo docker run --rm --network host mysql:5.7 mysqladmin --silent --wait=30 -uroot -proot ping
+
       - name: Install Composer dependencies
         run: composer install
 
       - name: Create reports directory
-        run: mkdir -p features/bootstrap/reports build/logs build/coverage coveragereport
+        run: mkdir -p features/bootstrap/reports
 
-      - name: Give execute permission to Behat and PHPUnit
-        run: |
-          chmod +x vendor/bin/behat
-          chmod +x vendor/bin/phpunit
+      - name: Give execute permission to Behat
+        run: chmod +x vendor/bin/behat
 
       - name: Run Behat tests
         run: vendor/bin/behat --format=html --out=features/bootstrap/reports/index.html
 
       - name: Generate HTML Coverage Report
         run: |
+          mkdir -p build/coverage
           php -d xdebug.mode=coverage -d xdebug.start_with_request=yes vendor/bin/phpunit --configuration phpunit.xml --coverage-html build/coverage
-          echo "Contents of build/coverage directory:"
-          ls -la build/coverage
-          if [ -d build/coverage ]; then
-            echo "HTML Coverage report generated successfully."
-          else
-            echo "HTML Coverage report not found."
-            exit 1
-          fi
-
-      - name: Generate Clover Coverage Report
-        run: |
-          php -d xdebug.mode=coverage -d xdebug.start_with_request=yes vendor/bin/phpunit --configuration phpunit.xml --coverage-clover build/logs/clover.xml
-          echo "Contents of build/logs directory:"
-          ls -la build/logs
-          if [ -f build/logs/clover.xml ]; then
-            echo "Clover Coverage report generated successfully."
-          else
-            echo "Clover Coverage report not found."
-            exit 1
-          fi
-
-      - name: Install .NET Core SDK
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: '8.x'
-
-      - name: Install ReportGenerator
-        run: dotnet tool install --global dotnet-reportgenerator-globaltool
-
-      - name: Generate Markdown Coverage Summary
-        run: |
-          ~/.dotnet/tools/reportgenerator -reports:build/logs/clover.xml -targetdir:coveragereport -reporttypes:MarkdownSummary
-          echo "Contents of coveragereport directory:"
-          ls -la coveragereport
-          if [ -f coveragereport/Summary.md ]; then
-            echo "Markdown Summary report generated successfully."
-          else
-            echo "Markdown Summary report not found."
-            exit 1
-          fi
-
-      - name: Publish coverage in build summary
-        run: cat coveragereport/Summary.md >> $GITHUB_STEP_SUMMARY
-        shell: bash
 
       - name: Upload HTML Coverage Report
         uses: actions/upload-artifact@v2
         with:
           name: html-coverage-report
           path: build/coverage
-
-      - name: Upload Coverage Summary
-        uses: actions/upload-artifact@v2
-        with:
-          name: coverage-summary
-          path: coveragereport/Summary.md
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
@@ -117,3 +79,13 @@ jobs:
           personal_token: ${{ secrets.PAT_TOKEN }}
           publish_branch: bddreporte
           publish_dir: features/bootstrap/reports
+
+      - name: Generate Markdown Coverage Summary
+        run: |
+          ~/.dotnet/tools/reportgenerator -reports:build/coverage/clover.xml -targetdir:coveragereport -reporttypes:MarkdownSummary;MarkdownSummaryGithub
+
+      - name: Upload Coverage Summary
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage-summary
+          path: coveragereport
