@@ -38,27 +38,24 @@ jobs:
       - name: Generate Coverage Report
         run: |
           php -d xdebug.mode=coverage -d xdebug.start_with_request=yes vendor/bin/phpunit --configuration phpunit.xml --coverage-clover build/logs/clover.xml
+          ls -la build/logs
+          cat build/logs/clover.xml || echo "No coverage.xml found"
 
       - name: Generate HTML Coverage Report
         run: |
           php -d xdebug.mode=coverage -d xdebug.start_with_request=yes vendor/bin/phpunit --configuration phpunit.xml --coverage-html build/coverage
 
-      - name: ReportGenerator
-        uses: danielpalme/ReportGenerator-GitHub-Action@5.3.7
-        with:
-          reports: build/logs/clover.xml
-          targetdir: coveragereport
-          reporttypes: MarkdownSummary;MarkdownAssembliesSummary;MarkdownSummaryGithub
-
       - name: Upload coverage report artifact
         uses: actions/upload-artifact@v2
         with:
           name: CoverageReport 
-          path: coveragereport 
+          path: build/logs/clover.xml
 
-      - name: Publish coverage in build summary
-        run: cat coveragereport/SummaryGithub.md >> $GITHUB_STEP_SUMMARY
-        shell: bash
+      - name: Upload HTML Coverage Report
+        uses: actions/upload-artifact@v2
+        with:
+          name: html-coverage-report
+          path: build/coverage
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
