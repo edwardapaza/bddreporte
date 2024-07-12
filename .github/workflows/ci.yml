@@ -14,27 +14,15 @@ jobs:
     name: Build and Analyze
     runs-on: ubuntu-latest
 
-    services:
-      mysql:
-        image: mysql:5.7
-        env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: testdb
-        options: --health-cmd="mysqladmin ping --silent" --health-interval=10s --health-timeout=5s --health-retries=3
-        ports:
-          - 3306:3306
-
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
           extensions: mbstring, intl, pdo_mysql, xdebug
-
-      - name: Wait for MySQL to be ready
-        run: sudo docker run --rm --network host mysql:5.7 mysqladmin --silent --wait=30 -uroot -proot ping
 
       - name: Install Composer dependencies
         run: composer install
@@ -48,10 +36,21 @@ jobs:
       - name: Run Behat tests
         run: vendor/bin/behat --format=html --out=features/bootstrap/reports/index.html
 
-      - name: Generate HTML Coverage Report
+      - name: Check Database Connection
         run: |
-          mkdir -p build/coverage
-          php -d xdebug.mode=coverage -d xdebug.start_with_request=yes vendor/bin/phpunit --configuration phpunit.xml --coverage-html build/coverage
+          sudo apt-get install -y mariadb-client
+          mysql --host 161.132.49.95 --port 3306 --user=escobar --password=Upt2024 --execute="SHOW DATABASES;"
+
+      - name: Set Execute Permission for PHPUnit
+        run: chmod +x vendor/bin/phpunit
+
+      - name: Run tests with coverage report
+        env:
+          DB_HOST: 161.132.49.95
+          DB_USER: escobar
+          DB_PASS: Upt2024
+          DB_NAME: sis_venta_test
+        run: php -d xdebug.mode=coverage -d xdebug.start_with_request=yes vendor/bin/phpunit --configuration phpunit.xml --coverage-html build/coverage
 
       - name: Upload HTML Coverage Report
         uses: actions/upload-artifact@v2
@@ -80,9 +79,11 @@ jobs:
           publish_branch: bddreporte
           publish_dir: features/bootstrap/reports
 
+      - name: Install ReportGenerator
+        run: dotnet tool install -g dotnet-reportgenerator-globaltool
+
       - name: Generate Markdown Coverage Summary
-        run: |
-          ~/.dotnet/tools/reportgenerator -reports:build/coverage/clover.xml -targetdir:coveragereport -reporttypes:MarkdownSummary;MarkdownSummaryGithub
+        run: ~/.dotnet/tools/reportgenerator -reports:build/coverage/clover.xml -targetdir:coveragereport -reporttypes:MarkdownSummary;MarkdownSummaryGithub
 
       - name: Upload Coverage Summary
         uses: actions/upload-artifact@v2
