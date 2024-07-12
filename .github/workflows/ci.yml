@@ -29,8 +29,10 @@ jobs:
       - name: Create reports directory
         run: mkdir -p features/bootstrap/reports build/logs build/coverage coveragereport
 
-      - name: Give execute permission to Behat
-        run: chmod +x vendor/bin/behat
+      - name: Give execute permission to Behat and PHPUnit
+        run: |
+          chmod +x vendor/bin/behat
+          chmod +x vendor/bin/phpunit
 
       - name: Run Behat tests
         run: vendor/bin/behat --format=html --out=features/bootstrap/reports/index.html
