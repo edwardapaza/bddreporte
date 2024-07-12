@@ -30,9 +30,6 @@ jobs:
           php -r "var_dump(extension_loaded('xdebug'));"
           php --ini
 
-      - name: Enable Xdebug Coverage
-        run: echo "xdebug.mode=coverage" >> /etc/php/8.2/cli/conf.d/20-xdebug.ini
-
       - name: Install Composer dependencies
         run: composer install
 
@@ -50,7 +47,7 @@ jobs:
 
       - name: Generate Coverage Report
         run: |
-          php -d xdebug.mode=coverage ./vendor/bin/phpunit --configuration phpunit.xml --coverage-text --coverage-clover=coverage.xml
+          php -d xdebug.mode=coverage -d xdebug.start_with_request=yes ./vendor/bin/phpunit --configuration phpunit.xml --coverage-text --coverage-clover=coverage.xml
         continue-on-error: true
 
       - name: Verify Coverage Report
@@ -66,7 +63,7 @@ jobs:
       - name: Generate HTML Coverage Report
         run: |
           mkdir -p coveragereport
-          php -d xdebug.mode=coverage ./vendor/bin/phpunit --configuration phpunit.xml --coverage-html coveragereport
+          php -d xdebug.mode=coverage -d xdebug.start_with_request=yes ./vendor/bin/phpunit --configuration phpunit.xml --coverage-html coveragereport
 
       - name: Upload HTML Coverage Report
         uses: actions/upload-artifact@v2
