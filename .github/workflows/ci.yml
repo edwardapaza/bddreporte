@@ -64,7 +64,7 @@ jobs:
       - name: Install .NET Core SDK
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '8.0'
+          dotnet-version: '8.x'
 
       - name: Install ReportGenerator
         run: dotnet tool install --global dotnet-reportgenerator-globaltool
@@ -80,6 +80,10 @@ jobs:
             echo "Markdown Summary report not found."
             exit 1
           fi
+
+      - name: Publish coverage in build summary
+        run: cat coveragereport/Summary.md >> $GITHUB_STEP_SUMMARY
+        shell: bash
 
       - name: Upload HTML Coverage Report
         uses: actions/upload-artifact@v2
