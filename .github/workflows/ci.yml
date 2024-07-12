@@ -50,8 +50,10 @@ jobs:
 
       - name: Generate Coverage Report
         run: |
-          php -d xdebug.mode=coverage -d xdebug.start_with_request=yes ./vendor/bin/phpunit --configuration phpunit.xml --coverage-text --coverage-clover=coverage.xml
-        continue-on-error: true
+          php -d xdebug.mode=coverage -d xdebug.start_with_request=yes ./vendor/bin/phpunit --configuration phpunit.xml --coverage-text --coverage-clover=coverage.xml || true
+
+      - name: Print PHPUnit Output
+        run: cat coverage.xml || echo "No coverage.xml found"
 
       - name: Verify Coverage Report
         run: |
