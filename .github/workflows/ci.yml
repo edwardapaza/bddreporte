@@ -3,15 +3,10 @@ name: Tarea Automatizada de ejecución de pruebas
 env:
   SONAR_ORG: 'edwardapaza'
   SONAR_PROJECT: 'edwardapaza_bddreporte'
-  DB_HOST: '161.132.49.95'
-  DB_PORT: '3306'
-  DB_DATABASE: 'sis_venta_test'
-  DB_USERNAME: 'escobar'
-  DB_PASSWORD: 'Upt2024'
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   workflow_dispatch:
 
 jobs:
@@ -28,6 +23,8 @@ jobs:
         with:
           php-version: '8.2'
           extensions: mbstring, intl, pdo_mysql, xdebug
+          coverage: phpunit
+          tools: phpunit, composer
 
       - name: Install Composer dependencies
         run: composer install
@@ -35,12 +32,14 @@ jobs:
       - name: Create reports directory
         run: mkdir -p features/bootstrap/reports build/logs build/coverage coveragereport
 
-      - name: Give execute permission to Behat
-        run: chmod +x vendor/bin/behat
+      - name: Give execute permission to Behat and PHPUnit
+        run: |
+          chmod +x vendor/bin/behat
+          chmod +x vendor/bin/phpunit
 
       - name: Run Behat tests
         run: vendor/bin/behat --format=html --out=features/bootstrap/reports/index.html
-      
+
       - name: Generate HTML Coverage Report
         run: |
           php -d xdebug.mode=coverage -d xdebug.start_with_request=yes vendor/bin/phpunit --configuration phpunit.xml --coverage-html build/coverage
@@ -85,7 +84,6 @@ jobs:
             exit 1
           fi
 
-          
       - name: Publish coverage in build summary
         run: cat coveragereport/Summary.md >> $GITHUB_STEP_SUMMARY
         shell: bash
@@ -93,17 +91,17 @@ jobs:
       - name: Check Database Connection
         run: |
           sudo apt-get install -y mariadb-client
-          mysql --host=$DB_HOST --port=$DB_PORT --user=$DB_USERNAME --password=$DB_PASSWORD --execute="SHOW DATABASES;"
+          mysql --host 161.132.49.95 --port 3306 --user=escobar --password=Upt2024 --execute="SHOW DATABASES;"
 
       - name: Set Execute Permission for PHPUnit
         run: chmod +x vendor/bin/phpunit
 
       - name: Run tests with coverage report
         env:
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASS: ${{ secrets.DB_PASS }}
-          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_HOST: 161.132.49.95
+          DB_USER: escobar
+          DB_PASS: Upt2024
+          DB_NAME: sis_venta_test
         run: php -d xdebug.mode=coverage -d xdebug.start_with_request=yes vendor/bin/phpunit --configuration phpunit.xml --coverage-html build/coverage
 
       - name: Upload HTML Coverage Report
@@ -111,6 +109,12 @@ jobs:
         with:
           name: html-coverage-report
           path: build/coverage
+
+      - name: Upload Coverage Summary
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage-summary
+          path: coveragereport/Summary.md
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
@@ -132,9 +136,3 @@ jobs:
           personal_token: ${{ secrets.PAT_TOKEN }}
           publish_branch: bddreporte
           publish_dir: features/bootstrap/reports
-
-      - name: Upload Coverage Summary
-        uses: actions/upload-artifact@v2
-        with:
-          name: coverage-summary
-          path: coveragereport
