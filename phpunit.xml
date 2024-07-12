@@ -12,7 +12,7 @@
 
     <coverage processUncoveredFiles="true">
         <include>
-            <directory suffix=".php">./src</directory>
+            <directory suffix=".php">./features/bootstrap</directory>
         </include>
     </coverage>
 </phpunit>
