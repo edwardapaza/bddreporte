@@ -61,14 +61,15 @@ jobs:
             exit 1
           fi
 
-      - name: Compress HTML Coverage Report
+      - name: Generate Markdown Coverage Summary
         run: |
-          if [ -d build/coverage ]; then
-            tar -czf build/coverage-report.tar.gz -C build/coverage .
-            echo "Contents of the tar.gz file:"
-            tar -tzf build/coverage-report.tar.gz
+          docker run --rm -v ${GITHUB_WORKSPACE}:/workspace -w /workspace danielpalme/reportgenerator -reports:build/logs/clover.xml -targetdir:coveragereport -reporttypes:MarkdownSummary;MarkdownSummaryGithub
+          echo "Contents of coveragereport directory:"
+          ls -la coveragereport
+          if [ -f coveragereport/SummaryGithub.md ]; then
+            echo "Markdown Summary report generated successfully."
           else
-            echo "HTML Coverage report directory not found."
+            echo "Markdown Summary report not found."
             exit 1
           fi
 
@@ -76,7 +77,13 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: html-coverage-report
-          path: build/coverage-report.tar.gz
+          path: build/coverage
+
+      - name: Upload Coverage Summary
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage-summary
+          path: coveragereport/SummaryGithub.md
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
